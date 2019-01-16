@@ -1,46 +1,11 @@
 steps:
 - id: 'create_agent_instance'
-  name: 'gcr.io/cloud-builders/gcloud'
-  args:
-  - compute
-  - instances
-  - create
-  - boot-agent${BUILD_ID}
-  - type=n1-standard-4
-  - --image=nested-vm-image
-  - --min-cpu-platform='Intel Haswell'
-  - --boot-disk-type=pd-ssd
-  - --boot-disk-size=30GB
-- id: 'configure_git_on_agent'
-  name: 'gcr.io/cloud-builders/gcloud'
-  waitFor: ['create_agent_instance']
-  args:
-  - compute
-  - ssh
-  - boot-agent${TAG_NAME}
-  - --command="gcloud init && git config --global credential.https://source.developers.google.com.helper gcloud.sh"
-  - type=n1-standard-4
-- id: 'clone_git_repo_on_agent'
-  name: 'gcr.io/cloud-builders/gcloud'
-  waitFor: ['configure_git_on_agent']
-  args:
-  - compute
-  - ssh
-  - boot-agent${TAG_NAME}
-  - --command="git clone ${_SOURCE_REPO} workspace"
-- id: 'run_packer_job'
-  waitFor: ['clone_git_repo_on_agent']
-  name: 'gcr.io/cloud-builders/gcloud'
-  - compute
-  - ssh
-  - boot-agent${TAG_NAME}
-  - --command
-  - |
-     cd workspace && \
-     packerio build \
-     -var "project=${PROJECT_ID}" \
-     -var "image_family=acme-centos" \
-     -var "gcs_bucket=gs://${PROJECT_ID}-custom-images" \
-     -var "build_number=$(echo ${TAG_NAME} | sed 's/\.//')" \
-     -var "zone=${_IMAGE_ZONE}" \
-     *-from-iso.json
+  name: 'gcr.io/$PROJECT_ID/base-image-builder'
+  env:
+  - 'IMAGE_FAMILY=acme2-images'
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'TAG_NAME=$TAG_NAME'
+  - 'IMAGE_ZONE=us-central1-f'
+  - 'PACKER_SPEC=centos-7-from-iso.json'
+  - 'IMAGES_BUCKET=gs://$PROJECT_ID-custom-images'
+timeout: 1800s
