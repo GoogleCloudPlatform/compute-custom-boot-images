@@ -2,7 +2,7 @@ steps:
 - id: 'create_agent_instance'
   name: 'gcr.io/$PROJECT_ID/base-image-builder'
   env:
-  - 'IMAGE_FAMILY=acme2-images'
+  - 'IMAGE_FAMILY=acme-centos-7'
   - 'PROJECT_ID=$PROJECT_ID'
   - 'TAG_NAME=$TAG_NAME'
   - 'IMAGE_ZONE=us-central1-f'
